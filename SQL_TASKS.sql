@@ -1,4 +1,26 @@
-﻿create database interview
+﻿/*
+========================================================
+SQL Practice — Real-World Scenarios
+Author: Samir Eldarov
+Repository: https://github.com/SamirEldarov0/sql-practice-real-scenarios
+
+Description:
+This file contains 100+ SQL tasks based on real-world business scenarios.
+It covers:
+- Table design and relationships
+- JOINs (INNER, LEFT)
+- GROUP BY and HAVING
+- Subqueries
+- EXISTS / NOT EXISTS
+- Aggregations
+- User-defined functions
+- Stored procedures
+- Views
+
+Database: SQL Server
+============================
+*/
+
 
 create table Users(
 Id int primary key identity(1,1),
