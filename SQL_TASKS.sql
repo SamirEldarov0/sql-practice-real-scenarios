@@ -1174,3 +1174,5 @@ select u.Id, u.FullName from Users u
 join Orders o on u.Id = o.UserId
 join OrderProducts op on o.Id = op.OrderId
 group by u.Id, u.FullName having count(distinct op.ProductId) = 2
+
+---
