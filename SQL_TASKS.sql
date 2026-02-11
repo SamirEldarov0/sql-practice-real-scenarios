@@ -1203,3 +1203,155 @@ group by u.Id, u.FullName having count(o.Id) > 2
 select * from UserProfiles
 select * from OrderProducts
 select * from Orders
+
+--2️⃣ Orders with more than 3 products
+--Show: OrderId, ProductCount
+select op.OrderId, count(distinct op.ProductId) as ProductCount from OrderProducts op
+group by op.OrderId having count(distinct op.ProductId) > 3
+
+--3️⃣ Products ordered by more than 2 different users
+--Show: ProductId, ProductName, UserCount
+
+select p.Id, p.ProductName, count(distinct u.Id) as UserCount from Products p
+join OrderProducts op on p.Id = op.ProductId
+join Orders o on o.Id = op.OrderId
+join Users u on u.Id = o.UserId
+group by p.Id, p.ProductName
+having count(distinct u.Id) > 2
+
+--4️⃣ Users who never ordered a Mouse
+--Show: UserId, FullName
+select * from Users u where 
+not exists (
+    select 1 from Orders o 
+    join OrderProducts op on o.Id = op.OrderId
+    join Products p on p.Id = op.ProductId
+    where u.Id = o.UserId and p.ProductName = 'Mouse'
+    )
+SELECT u.Id AS UserId, u.FullName
+FROM Users u
+LEFT JOIN Orders o ON u.Id = o.UserId
+LEFT JOIN OrderProducts op ON o.Id = op.OrderId
+LEFT JOIN Products p ON p.Id = op.ProductId AND p.ProductName = 'Mouse'
+WHERE p.Id IS NULL;
+
+--5️⃣ Orders where total quantity > 5
+--Show: OrderId, TotalQuantity
+select * from Orders
+select * from OrderProducts
+select op.OrderId, sum(op.Quantity) as TotalQuantity from OrderProducts op
+group by op.OrderId having sum(op.Quantity) > 5
+
+--6️⃣ Users whose total spending > 1000
+--Show: UserId, FullName, TotalSpent
+select u.Id, u.FullName from Users u
+join Orders o on o.UserId = u.Id
+group by u.Id, u.FullName having sum(o.TotalAmount) > 1000
+
+--7️⃣ Products that were never ordered
+--Show: ProductId, ProductName
+
+select p.Id, p.ProductName from Products p where
+not exists (
+    select 1 from OrderProducts op where p.Id = op.ProductId
+    )
+
+select p.Id, p.ProductName from Products p
+left join OrderProducts op on p.Id = op.ProductId
+where op.ProductId is null
+
+--8️⃣ Orders containing both Laptop and Headphones
+--Show: OrderId
+
+select o.Id from Orders o where exists(
+    select 1 from OrderProducts op
+    join Products p on p.Id = op.ProductId where o.Id = op.OrderId and p.ProductName = 'Laptop'
+) and exists (
+    select 1 from OrderProducts op
+    join Products p on p.Id = op.ProductId where o.Id = op.OrderId and p.ProductName = 'Headphones'
+)
+
+select op.OrderId
+from OrderProducts op
+join Products p on p.Id = op.ProductId
+where p.ProductName in ('Laptop', 'Headphones')
+group by op.OrderId
+having count(distinct p.ProductName) = 2
+
+--9️⃣ Users who ordered at least 3 different products
+--Show: UserId, FullName, ProductCount
+
+select u.Id, u.FullName, COUNT(distinct p.Id) as ProductCount from Users u
+join Orders o on o.UserId = u.Id
+join OrderProducts op on op.OrderId = o.Id
+join Products p on p.Id = op.ProductId
+group by u.Id, u.FullName having COUNT(distinct p.Id) >= 3
+
+--🔟 Orders with exactly 2 different products
+--Show: OrderId
+
+select op.OrderId from OrderProducts op
+group by op.OrderId having COUNT(distinct op.ProductId) = 2
+
+SELECT 
+    u.Id AS UserId,
+    u.FullName,
+    COUNT(DISTINCT op.ProductId) AS ProductCount,
+    COUNT(DISTINCT o.Id) AS OrderCount
+FROM Users u
+JOIN Orders o ON o.UserId = u.Id
+JOIN OrderProducts op ON op.OrderId = o.Id
+GROUP BY u.Id, u.FullName
+HAVING 
+    COUNT(DISTINCT op.ProductId) >= 3
+    AND COUNT(DISTINCT o.Id) >= 2;
+
+--1️⃣ Users who placed at least 2 orders
+--Show: UserId, FullName, OrderCount
+
+select u.Id, u.FullName, COUNT(o.Id) as OrderCount from Users u
+join Orders o on o.UserId = u.Id
+group by u.Id, u.FullName having COUNT(o.Id) >= 2
+
+--2️⃣ Orders that contain more than 1 product
+--Show: OrderId, ProductCount
+
+select op.OrderId, COUNT(distinct op.ProductId) as ProductCount from OrderProducts op
+group by op.OrderId having COUNT(distinct op.ProductId) > 1
+
+--3️⃣ Products ordered by at least 2 different users
+--Show: ProductId, ProductName, UserCount
+
+select p.Id, p.ProductName, COUNT(distinct u.Id) as UserCount from Products p
+join OrderProducts op on op.ProductId = p.Id
+join Orders o on o.Id = op.OrderId
+join Users u on u.Id = o.UserId
+group by p.Id, p.ProductName having COUNT(distinct u.Id) >= 2
+
+--7️⃣ Products that were never ordered
+--Show: ProductId, ProductName
+select p.Id, p.ProductName from Products p
+left join OrderProducts op on p.Id = op.ProductId
+where op.ProductId is null
+
+select p.Id, p.ProductName from Products p where
+not exists(
+    select 1 from OrderProducts op where p.Id = op.ProductId
+    )
+--8️⃣ Orders containing both Mouse and Keyboard
+--Show: OrderId
+
+select o.Id from Orders o
+where exists(
+    select 1 from Products p
+    join OrderProducts op on p.Id = op.ProductId
+    where o.Id = op.OrderId and p.ProductName = 'Mouse')
+and exists(
+  select 1 from Products p
+    join OrderProducts op on p.Id = op.ProductId
+    where o.Id = op.OrderId and p.ProductName = 'Keyboard')
+
+select op.OrderId from OrderProducts op
+join Products p on p.Id = op.ProductId
+where p.ProductName in ('Mouse', 'Keyboard')
+group by op.OrderId having COUNT(distinct p.ProductName) = 2
