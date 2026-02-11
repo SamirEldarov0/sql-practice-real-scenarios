@@ -1175,4 +1175,31 @@ join Orders o on u.Id = o.UserId
 join OrderProducts op on o.Id = op.OrderId
 group by u.Id, u.FullName having count(distinct op.ProductId) = 2
 
----
+--1️⃣ Users who ordered all products at least once
+--Show: UserId, FullName
+
+select u.Id, u.FullName from Users u
+join Orders o on u.Id = o.UserId
+join OrderProducts op on op.OrderId = o.Id
+group by u.Id, u.FullName having count(distinct op.ProductId) = (select count(*) from Products)
+
+--2️⃣ Orders where every product’s quantity ≥ 2
+--Show: OrderId
+
+select o.Id from Orders o where
+not exists (select 1 from OrderProducts op where op.OrderId = o.Id and op.Quantity < 2)
+
+select op.OrderId from OrderProducts op
+group by op.OrderId having min(op.Quantity) >= 2
+
+
+--1️⃣ Users who placed more than 2 orders
+--Show: UserId, FullName, OrderCount
+
+select u.Id, u.FullName, count(o.Id) as OrderCount from Users u
+join Orders o on u.Id = o.UserId
+group by u.Id, u.FullName having count(o.Id) > 2
+
+select * from UserProfiles
+select * from OrderProducts
+select * from Orders
