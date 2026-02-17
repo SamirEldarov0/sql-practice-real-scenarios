@@ -1355,3 +1355,143 @@ select op.OrderId from OrderProducts op
 join Products p on p.Id = op.ProductId
 where p.ProductName in ('Mouse', 'Keyboard')
 group by op.OrderId having COUNT(distinct p.ProductName) = 2
+
+--9️⃣ Users who ordered at least 3 different products
+--Show: UserId, FullName, ProductCount
+
+select u.Id, u.FullName, COUNT(distinct p.Id) as ProductCount from Users u
+join Orders o on o.UserId = u.Id
+join OrderProducts op on o.Id = op.OrderId
+join Products p on p.Id = op.ProductId
+group by u.Id, u.FullName having COUNT(distinct p.Id) >= 3
+
+--🔟 Orders with exactly 2 different products
+--Show: OrderId
+
+select op.OrderId from OrderProducts op
+group by op.OrderId having count(distinct op.ProductId) = 2
+
+--1️⃣ Users who ordered more than 5 total items (sum of quantities)
+--Show: UserId, FullName, TotalQuantity
+
+select u.Id, u.FullName, SUM(op.Quantity) as TotalQuantity from Users u
+join Orders o on o.UserId = u.Id
+join OrderProducts op on o.Id = op.OrderId
+group by u.Id, u.FullName having sum(op.Quantity) > 5
+
+--2️⃣ Orders where any product quantity > 3
+--Show: OrderId, ProductId, Quantity
+
+select op.OrderId, op.ProductId, op.Quantity from OrderProducts op where op.Quantity > 3
+
+--3️⃣ Products ordered in at least 3 different orders
+--Show: ProductId, ProductName, OrderCount
+select p.Id, p.ProductName, COUNT(distinct o.Id) as OrderCount from Products p
+join OrderProducts op on op.ProductId = p.Id
+join Orders o on o.Id = op.OrderId
+group by p.Id, p.ProductName having COUNT(distinct o.Id) >= 3
+
+--4️⃣ Users who ordered more than 2 different product categories
+--Show: UserId, FullName, CategoryCount
+
+select u.Id, u.FullName, COUNT(distinct op.ProductId) as CategoryCount from Users u
+join Orders o on o.UserId = u.Id
+join OrderProducts op on o.Id = op.OrderId
+group by u.Id, u.FullName having COUNT(distinct op.ProductId) > 2
+
+--5️⃣ Orders whose total value is greater than 1000
+--Show: OrderId, TotalValue
+select Id, TotalAmount as TotalValue from Orders where TotalAmount > 1000
+
+--6️⃣ Users whose average order value > 500
+--Show: UserId, FullName, AvgOrderValue
+
+select u.Id, u.FullName, avg(o.TotalAmount) as AvgOrderValue from Users u
+join Orders o on u.Id = o.UserId
+group by u.Id, u.FullName having avg(o.TotalAmount) > 500
+
+--🔟 Products that were never ordered together with Mouse
+--Show: ProductId, ProductName
+
+select p.Id, p.ProductName from Products p
+where exists(
+    select 1 from OrderProducts op where p.Id = op.ProductId and p.ProductName <> 'Mouse'
+    )
+
+--    9️⃣ Users who ordered the same product more than once
+--(across different orders)
+--Show: UserId, ProductId, OrderCount
+
+select u.Id, op.ProductId, COUNT(distinct o.Id) as OrderCount from Users u
+join Orders o on o.UserId = u.Id
+join OrderProducts op on op.OrderId = u.Id
+group by u.Id, op.ProductId having count(distinct o.Id) > 1
+
+--8️⃣ Orders where all products cost more than 200
+--Show: OrderId
+select op.OrderId from OrderProducts op
+join Products p on p.Id = op.ProductId
+group by op.OrderId having min(p.Price) > 200
+
+--7️⃣ Products that were ordered by exactly one user
+--Show: ProductId, ProductName
+
+select p.Id, p.ProductName from Products p
+join OrderProducts op on p.Id = op.ProductId
+join Orders o on o.Id = op.OrderId
+group by p.Id, p.ProductName having count(distinct o.UserId) = 1
+
+--🟠 Task 1 — Orders where ALL product quantities > 3
+select op.OrderId from OrderProducts op
+
+--8️⃣ Orders where all products cost more than 200
+--Show: OrderId
+select o.Id from Orders o
+join OrderProducts op on o.Id = op.OrderId
+join Products p on p.Id = op.ProductId
+group by o.Id having min(p.Price) > 200
+
+--9️⃣ Users who ordered the same product more than once
+--(across different orders)
+--Show: UserId, ProductId, OrderCount
+select o.UserId, op.ProductId, COUNT(distinct o.Id) as OrderCount from Orders o
+join OrderProducts op on op.OrderId = o.Id
+group by o.UserId, op.ProductId having count(distinct o.Id) > 1
+
+--🔟 Products that were never ordered together with Mouse
+--Show: ProductId, ProductName
+SELECT p.Id, p.ProductName
+FROM Products p
+WHERE p.ProductName <> 'Mouse'
+AND NOT EXISTS (
+    SELECT 1
+    FROM OrderProducts op1
+    JOIN OrderProducts op2 
+        ON op1.OrderId = op2.OrderId
+    JOIN Products pm 
+        ON pm.Id = op1.ProductId
+    WHERE pm.ProductName = 'Mouse'
+    AND op2.ProductId = p.Id
+);
+
+--11️⃣ Users who placed orders in more than one month
+--📌 Return users who have orders in at least 2 different months.
+--Show: UserId FullName MonthCount
+select u.Id, u.FullName, COUNT(DISTINCT FORMAT(o.OrderDate, 'yyyy-MM')) as MonthCount from Users u
+join Orders o on u.Id = o.UserId
+group by u.Id, u.FullName having COUNT(DISTINCT FORMAT(o.OrderDate, 'yyyy-MM')) >= 2
+
+--12️⃣ Products with total sold quantity greater than 20 📌 Sum all quantities per product.
+--Show: ProductId ProductName TotalSoldQuantity  🧠 Tests: SUM(), grouping
+select p.Id, p.ProductName, sum(op.Quantity) as TotalSoldQuantity from Products p
+join OrderProducts op on p.Id = op.ProductId
+group by p.Id, p.ProductName having sum(op.Quantity) > 20
+
+--13️⃣ Orders whose total value is greater than the average order value
+
+--📌 Calculate order total (Price × Quantity).
+--Return orders above global average.
+--Show:
+--OrderId
+--TotalValue
+--🧠 Tests: aggregate vs aggregate comparison
