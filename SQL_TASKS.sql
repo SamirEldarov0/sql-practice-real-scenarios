@@ -1495,3 +1495,132 @@ group by p.Id, p.ProductName having sum(op.Quantity) > 20
 --OrderId
 --TotalValue
 --🧠 Tests: aggregate vs aggregate comparison
+
+create function GetUserTotalSpending (@UserId INT)
+returns decimal(18,2)
+as
+begin
+    declare @Total DECIMAL(18,2);
+
+    select @Total = sum(p.Price*op.Quantity)
+    from Orders o
+    join OrderProducts op on o.Id = op.OrderId
+    join Products p on p.Id = op.ProductId
+    where o.UserId = @UserId
+
+    return @Total;
+end
+
+select GetUserTotalSpending(1) as TotalSpent;
+
+create function GetUserOrders (@UserId int)
+returns table
+as
+return
+(
+    SELECT 
+        o.Id AS OrderId,
+        o.OrderDate,
+        SUM(p.Price * op.Quantity) AS TotalValue
+    FROM Orders o
+    JOIN OrderProducts op ON o.Id = op.OrderId
+    JOIN Products p ON p.Id = op.ProductId
+    WHERE o.UserId = @UserId
+    GROUP BY o.Id, o.OrderDate
+)
+
+--create view vw_OrderTotals
+--as
+--kskskssk
+
+--create procedure CreateOrder
+--    @UserId int
+--as
+--begin
+--    insert into Orders
+--    values(
+--end
+
+--1) Users who placed more than 3 orders
+--Show:UserId, FullName, OrderCount
+select u.Id as UserId, u.FullName, count(distinct o.Id) as OrderCount from Users u
+join Orders o on o.UserId = u.Id
+group by u.Id, u.FullName having COUNT(distinct o.Id) > 3
+
+--2) Orders whose total value is greater than 500 (Price × Quantity)
+--Show: OrderId, TotalValue
+select op.OrderId, SUM(op.Quantity * p.Price) as TotalValue from OrderProducts OP
+join Products p on p.Id = op.ProductId
+group by op.OrderId having SUM(op.Quantity * p.Price) > 500
+
+--3) Products ordered by more than 2 different users
+--Show:
+--ProductId
+--ProductName
+--UserCount
+select p.Id, p.ProductName, count(distinct o.UserId) as UserCount from Products p
+join OrderProducts op on p.Id = op.ProductId
+join Orders o on o.Id = op.OrderId
+group by p.Id, p.ProductName having count(distinct o.UserId) > 2
+
+--4️⃣ Users who never ordered a product cheaper than 100
+--Show:
+--UserId
+--FullName
+select u.Id, u.FullName from Users u
+where not exists(
+    select 1 from Orders o
+    join OrderProducts op on o.Id = op.OrderId
+    join Products p on p.Id = op.ProductId
+    where u.Id = o.UserId and p.Price < 100
+    )
+
+select u.Id, u.FullName from Users u
+join Orders o on o.UserId = u.Id
+join OrderProducts op on op.OrderId = o.Id
+join Products p on p.Id = op.ProductId
+group by u.Id, u.FullName having min(p.Price) >= 100
+
+--1) Users who placed their first order in 2024
+--📌 Find each user's first order date.
+--Return users whose first order was in 2024.
+--Show: UserId, FullName, FirstOrderDate
+
+select u.Id, u.FullName from Users u
+join Orders o on o.UserId = u.Id
+group by u.Id, u.FullName
+having YEAR(min(o.OrderDate)) = 2024
+
+--2️) Products with an average ordered quantity greater than 3
+--📌 For each product, calculate average quantity per order.
+--Show: ProductId, ProductName, AvgQuantity
+select p.Id, p.ProductName, AVG(op.Quantity) as AvgQuantity from Products p
+join OrderProducts op on p.Id = op.ProductId
+group by p.Id, p.ProductName having AVG(op.Quantity) > 3
+
+--3️) Orders that contain both a product priced above 500 and a product priced below 100 
+--Show:OrderId
+SELECT DISTINCT op.OrderId
+FROM OrderProducts op
+WHERE EXISTS (
+    SELECT 1
+    FROM OrderProducts op2
+    JOIN Products p1 ON p1.Id = op2.ProductId
+    WHERE op2.OrderId = op.OrderId
+      AND p1.Price > 500
+)
+AND EXISTS (
+    SELECT 1
+    FROM OrderProducts op3
+    JOIN Products p2 ON p2.Id = op3.ProductId
+    WHERE op3.OrderId = op.OrderId
+      AND p2.Price < 100
+);
+
+SELECT op.OrderId
+FROM OrderProducts op
+JOIN Products p ON p.Id = op.ProductId
+GROUP BY op.OrderId
+HAVING 
+    SUM(CASE WHEN p.Price > 500 THEN 1 ELSE 0 END) > 0
+AND SUM(CASE WHEN p.Price < 100 THEN 1 ELSE 0 END) > 0;
