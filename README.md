@@ -19,5 +19,4 @@ development, reporting, and data analysis.
 - SQL Server
 
 ## Structure
-All tasks are stored in a single SQL file and clearly separated by numbered
-sections and comments for readability.
+All tasks are stored in a single SQL file and clearly separated by numbered sections and comments for readability.
