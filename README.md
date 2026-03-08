@@ -6,7 +6,7 @@ development, reporting, and data analysis.
 
 ## Topics Covered
 - Table design and relationships
-- JOINs (INNER, LEFT)
+- JOINs (INNER, LEFT, RIGHT)
 - GROUP BY and HAVING
 - Subqueries
 - EXISTS / NOT EXISTS
@@ -19,5 +19,4 @@ development, reporting, and data analysis.
 - SQL Server
 
 ## Structure
-All tasks are stored in a single SQL file and clearly separated by numbered
-sections and comments for readability.
+All tasks are stored in a single SQL file and clearly separated by numbered sections and comments for readability.

@@ -417,7 +417,6 @@ group by u.Id, u.FullName having count(o.UserId)=1
 
 
 --5?? Orders containing products from at least 2 different price ranges
-
 --(e.g. <100 and ?100)
 --Show: OrderId
 select o.Id from Orders o
