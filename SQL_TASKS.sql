@@ -1624,3 +1624,60 @@ GROUP BY op.OrderId
 HAVING 
     SUM(CASE WHEN p.Price > 500 THEN 1 ELSE 0 END) > 0
 AND SUM(CASE WHEN p.Price < 100 THEN 1 ELSE 0 END) > 0;
+
+--1️⃣ Total number of orders per user : Show: UserId, FullName, OrderCount
+
+select u.Id, u.FullName, count(distinct o.Id) as OrderCount from Users u
+join Orders o on o.UserId = u.Id
+group by u.Id, u.FullName
+
+--2️⃣ Total quantity ordered for each product Show: ProductId, ProductName, TotalQuantity
+
+select p.Id, p.ProductName, sum(op.Quantity) as TotalQuantity from Products p
+join OrderProducts op on p.Id = op.ProductId
+group by p.Id, p.ProductName
+
+--3️⃣ Orders that contain more than 2 different products Show: OrderId, ProductCount
+select op.OrderId, COUNT(distinct op.ProductId) from OrderProducts op
+group by op.OrderId having COUNT(distinct op.ProductId) > 2
+
+--4️⃣ Users who never placed an order Show: UserId, FullName
+
+select u.Id, u.FullName from Users u
+left join Orders o on u.Id = o.UserId
+where o.UserId is null
+
+select u.Id, u.FullName from Users u
+where not exists(
+    select 1 from Orders o where u.Id = o.UserId)
+
+--6️⃣ Orders where total quantity of items > 10 Show:OrderId TotalQuantity
+
+select op.OrderId, sum(op.Quantity) as TotalQuantity from OrderProducts op
+group by op.OrderId having sum(op.Quantity) > 10
+
+--7️⃣ Products that were ordered at least once Show: ProductId, ProductName
+
+select p.Id, p.ProductName from Products p
+join OrderProducts op on p.Id = op.ProductId
+group by p.Id, p.ProductName
+
+--8️⃣ Users who ordered more than 1 different product Show: UserId, FullName
+select u.Id, u.FullName from Users u
+join Orders o on u.Id = o.UserId
+join OrderProducts op on o.Id = op.OrderId
+group by u.Id, u.FullName having count(distinct op.ProductId) > 1
+
+--9️⃣ The most expensive product in the table Show: ProductId ProductName Price 
+
+select top 1 p.Id, p.ProductName, p.Price from Products p
+order by p.Price desc
+
+--🔟 Orders that contain a product priced above 500 Show: OrderId
+select op.OrderId from OrderProducts op
+where exists(
+    select 1 from Products p where op.ProductId = p.Id and p.Price > 500)
+
+select distinct op.OrderId from OrderProducts op
+join Products p on op.ProductId = p.Id
+where p.Price > 500
